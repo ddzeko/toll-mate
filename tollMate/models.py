@@ -2,7 +2,7 @@
 from operator import and_
 import re
 from . import db
-from sqlalchemy import and_
+from sqlalchemy import and_, inspect
 from sqlalchemy.sql import func
 from sqlalchemy.types import JSON
 from sqlalchemy.orm import aliased
@@ -169,8 +169,10 @@ def routetab_get_by_id(route_id):
             .first()
     )
 
+def object_as_dict(obj):
+    return {c.key: getattr(obj, c.key)
+            for c in inspect(obj).mapper.column_attrs}
+
 # retrieval of descriptive details of HAC_Mjesto entity
 def mjesto_get_by_id(mjesto_id):
-    return list(db.session.query(HAC_Mjesto.id, HAC_Mjesto.mjesto, HAC_Mjesto.ruta,
-        HAC_Mjesto.id_ulaz, HAC_Mjesto.id_izlaz).filter(HAC_Mjesto.id == mjesto_id)
-        .first())
+    return object_as_dict(db.session.query(HAC_Mjesto).filter_by(id=mjesto_id).first())

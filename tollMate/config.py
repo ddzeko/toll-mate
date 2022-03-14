@@ -17,6 +17,7 @@ class Config:
     STATIC_FOLDER = 'static'
     TEMPLATES_FOLDER = 'templates'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    JSON_SORT_KEYS = False
     def SQLALCHEMY_DATABASE_URI():
         raise ConfigurationError("SQLALCHEMY_DATABASE_URI has to be overriden in per-deployment config")
 
