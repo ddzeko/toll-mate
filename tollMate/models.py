@@ -154,16 +154,29 @@ def routetab_add(id_mjesto_od, id_mjesto_do):
     db.session.commit()
     return tabEntry.id
 
+
 # retrieval of GPS points of entry and exit needed for TomTom Routing API lookup
 def routetab_get_by_id(route_id):
     p1s = (db.session.query(HAC_Mjesto.id_ulaz).join(HAC_TablicaRuta, HAC_Mjesto.id == HAC_TablicaRuta.id_mjesto_od)
             .filter(HAC_TablicaRuta.id == route_id).scalar())
     p2s = (db.session.query(HAC_Mjesto.id_izlaz).join(HAC_TablicaRuta, HAC_Mjesto.id == HAC_TablicaRuta.id_mjesto_do)
             .filter(HAC_TablicaRuta.id == route_id).scalar())
-    return list((
+    return (
         db.session.query(HAC_Point.gps_lon, HAC_Point.gps_lat).filter(HAC_Point.id==p1s).first(),
         db.session.query(HAC_Point.gps_lon, HAC_Point.gps_lat).filter(HAC_Point.id==p2s).first()
-    ))
+    )   
+
+
+def routetab_update(route_id, resp, dist):
+    try:
+        db.session.query(HAC_TablicaRuta).filter_by(id=route_id).update(
+            {   "tomtom_response": resp,
+                "route_length": dist,
+                "route_status": 1
+            })
+        db.session.commit()
+    except:
+        print('Error in routetab_update()')
 
 def object_as_dict(obj):
     return {c.key: getattr(obj, c.key)

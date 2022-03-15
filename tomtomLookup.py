@@ -20,6 +20,7 @@ except Exception as e:
 
 import time
 from os import environ
+
 from datetime import timedelta
 
 from requests_cache import CachedSession
@@ -65,13 +66,16 @@ class TomTomLookup():
             raise Exception("TomTomLookup: GET call returned invalid response")
         return response.text
 
-    def getDistance(self, url):
-        response_text = self.getUrl(url)
+    def getDistance_from_resp(self, response_text):
         try:
             json_obj = json.loads(response_text)
             return json_obj['routes'][0]['summary']['lengthInMeters']
         except:
             raise Exception("TomTomLookup: Failed to decode REST API response")
+
+    def getDistance_from_url(self, url):
+        response_text = self.getUrl(url)
+        return self.getDistance_from_resp(response_text)
 
     def __del__(self):
         self.session.close()

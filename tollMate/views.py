@@ -3,7 +3,11 @@
 import logging
 from flask import abort, request, json, jsonify
 from . import app, db, models
-from tomtomLookup import tomtom_url
+from tomtomLookup import tomtom_url, TomTomLookup
+
+
+ttl = TomTomLookup() # global
+
 
 @app.route('/')
 def hello_world():
@@ -15,12 +19,31 @@ def hello_world():
             abort (500, 'Error. Something bad happened.')
 
 
+# TOMTOM API
 
-@app.route('/tom/<route_id>', methods=['GET'])
+@app.route('/tom/url/<route_id>', methods=['GET'])
 def show_tomtom_url(route_id):
-    gps_coords = [ str(item) for item in models.routetab_get_by_id(route_id) ]
-    logging.info("gpsVector = {}".format(gps_coords))
-    return tomtom_url(gps_coords[0:2], gps_coords[2:4])
+    (od, do) = models.routetab_get_by_id(route_id)
+    gps_od = [ str(item) for item in od ]
+    gps_do = [ str(item) for item in do ]
+    logging.info("gps_od = {}, gps_do = {}".format(gps_od, gps_do))
+    return tomtom_url(gps_od, gps_do)
+
+
+@app.route('/tom/run/<route_id>', methods=['GET'])
+def fetch_tomtom_url(route_id):
+    (od, do) = models.routetab_get_by_id(route_id)
+    gps_od = [ str(item) for item in od ]
+    gps_do = [ str(item) for item in do ]
+    logging.info("gps_od = {}, gps_do = {}".format(gps_od, gps_do))
+    url = tomtom_url(gps_od, gps_do)
+    resp = ttl.getUrl(url)
+    dist = ttl.getDistance_from_resp(resp)
+    models.routetab_update(route_id, resp, dist)
+    return jsonify({"route_length":dist})
+
+
+
 
 # some API methods returning JSON
 
