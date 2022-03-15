@@ -1,14 +1,9 @@
 # views.py
 
-from os import environ
 import logging
 from flask import abort, request, json, jsonify
 from . import app, db, models
-
-
-# from hacTollSpeed import tomtom_url
-
-TOMTOM_AUTH_KEY = environ.get("TOMTOM_AUTH_KEY")
+from tomtomLookup import tomtom_url
 
 @app.route('/')
 def hello_world():
@@ -19,13 +14,7 @@ def hello_world():
             db.session.rollback ()
             abort (500, 'Error. Something bad happened.')
 
-def tomtom_url(gps_od, gps_do):
-    def prefix():
-        return 'https://api.tomtom.com/routing/1/calculateRoute/'
-    def suffix():
-        return (f'/json?key={TOMTOM_AUTH_KEY}&routeRepresentation=summaryOnly&maxAlternatives=0' + 
-                '&computeTravelTimeFor=none&routeType=fastest&traffic=false&travelMode=car')
-    return f'{prefix()}{",".join(gps_od)}:{",".join(gps_do)}{suffix()}'
+
 
 @app.route('/tom/<route_id>', methods=['GET'])
 def show_tomtom_url(route_id):

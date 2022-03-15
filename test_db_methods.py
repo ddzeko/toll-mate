@@ -43,7 +43,10 @@ def main():
     args = parse_args(sys.argv[1:])
     logging_init(args)
     logging.info("testing started, with DEBUG environment variable value set to {}".format(repr(DEBUG)))
-    models.routetab_get_by_id(2)
+    logging.info("----------------")
+    x = models.routetab_get_by_id(2)
+    logging.info("----------------")
+    logging.info("x = {}".format(x))
     logging.info("testing finished")
     return 0
 

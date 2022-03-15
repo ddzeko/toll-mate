@@ -156,18 +156,14 @@ def routetab_add(id_mjesto_od, id_mjesto_do):
 
 # retrieval of GPS points of entry and exit needed for TomTom Routing API lookup
 def routetab_get_by_id(route_id):
-    p1 = aliased(HAC_Point)
-    p2 = aliased(HAC_Point)
-    m1s  = aliased(HAC_Mjesto)
-    m2s  = aliased(HAC_Mjesto)
-    p1s = db.session.query(m1s.id_ulaz).filter(and_(m1s.id == HAC_TablicaRuta.id_mjesto_od,HAC_TablicaRuta.id == route_id)).subquery()
-    p2s = db.session.query(m2s.id_izlaz).filter(and_(m2s.id == HAC_TablicaRuta.id_mjesto_do,HAC_TablicaRuta.id == route_id)).subquery()
-    return list(
-        db.session.query(p1.gps_lon, p1.gps_lat, p2.gps_lon, p2.gps_lat)
-            .filter(p1.id.in_(p1s))
-            .filter(p2.id.in_(p2s))
-            .first()
-    )
+    p1s = (db.session.query(HAC_Mjesto.id_ulaz).join(HAC_TablicaRuta, HAC_Mjesto.id == HAC_TablicaRuta.id_mjesto_od)
+            .filter(HAC_TablicaRuta.id == route_id).scalar())
+    p2s = (db.session.query(HAC_Mjesto.id_izlaz).join(HAC_TablicaRuta, HAC_Mjesto.id == HAC_TablicaRuta.id_mjesto_do)
+            .filter(HAC_TablicaRuta.id == route_id).scalar())
+    return list((
+        db.session.query(HAC_Point.gps_lon, HAC_Point.gps_lat).filter(HAC_Point.id==p1s).first(),
+        db.session.query(HAC_Point.gps_lon, HAC_Point.gps_lat).filter(HAC_Point.id==p2s).first()
+    ))
 
 def object_as_dict(obj):
     return {c.key: getattr(obj, c.key)
