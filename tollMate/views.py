@@ -66,3 +66,17 @@ def process_json():
     else:
         return 'Content-Type not supported!'
 
+
+@app.route('/api/routeInfo', methods=['POST'])
+def process_routeinfo():
+    content_type = request.headers.get('Content-Type')
+    if (content_type == 'application/json'):
+        # check input parameters are there
+        json = request.get_json()
+        if ('hac_ulaz' in json and 'hac_izlaz' in json):
+            return jsonify(models.routetab_get_routeinfo(json['hac_ulaz'], json['hac_izlaz']))
+        else:
+            return "Parameters missing"
+    else:
+        return 'Content-Type not supported!'
+

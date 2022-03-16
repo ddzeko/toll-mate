@@ -185,3 +185,18 @@ def object_as_dict(obj):
 # retrieval of descriptive details of HAC_Mjesto entity
 def mjesto_get_by_id(mjesto_id):
     return object_as_dict(db.session.query(HAC_Mjesto).filter_by(id=mjesto_id).first())
+
+
+# route info 
+def routetab_get_routeinfo(hac_ulaz, hac_izlaz):
+    try:
+        m1s = (db.session.query(HAC_Mjesto.id).filter(HAC_Mjesto.mjesto == hac_ulaz).scalar())
+        m2s = (db.session.query(HAC_Mjesto.id).filter(HAC_Mjesto.mjesto == hac_izlaz).scalar())
+        print("m1s={} m2s={}".format(m1s, m2s))
+        routeInfo = (db.session.query(HAC_TablicaRuta.id, HAC_TablicaRuta.route_length)
+            .filter(and_(HAC_TablicaRuta.id_mjesto_od == m1s, HAC_TablicaRuta.id_mjesto_do == m2s)).first())
+        (route_id, route_length) = list(routeInfo)
+        return { "route_length": route_length }
+    except:
+        print('Error in routetab_get_routeinfo()')
+        return { "error": "Error in routetab_get_routeinfo()" }
