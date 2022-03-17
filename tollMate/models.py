@@ -6,6 +6,7 @@ from sqlalchemy import and_, inspect
 from sqlalchemy.sql import func
 from sqlalchemy.types import JSON
 from sqlalchemy.orm import aliased
+import logging
 
 class Uploads(db.Model):
     __tablename__ = 'uploads'
@@ -189,6 +190,7 @@ def mjesto_get_by_id(mjesto_id):
 
 # route info 
 def routetab_get_routeinfo(hac_ulaz, hac_izlaz):
+    logging.info("now in models.routetab_get_routeinfo ...")
     try:
         m1s = (db.session.query(HAC_Mjesto.id).filter(HAC_Mjesto.mjesto == hac_ulaz).scalar())
         m2s = (db.session.query(HAC_Mjesto.id).filter(HAC_Mjesto.mjesto == hac_izlaz).scalar())

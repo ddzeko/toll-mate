@@ -75,6 +75,8 @@ def process_routeinfo():
         # check input parameters are there
         json = request.get_json()
         if ('hac_ulaz' in json and 'hac_izlaz' in json):
+            logging.info("Request to {} with parameters: hac_ulaz={}, hac_izlaz={}"
+                .format(request.environ.get('REQUEST_URI'), repr(json['hac_ulaz']), repr(json['hac_izlaz'])))
             return jsonify(models.routetab_get_routeinfo(json['hac_ulaz'], json['hac_izlaz']))
         else:
             return "Parameters missing"
