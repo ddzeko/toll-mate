@@ -1,10 +1,11 @@
 # views.py
 
+from os import environ
+
 import logging
 from flask import abort, request, json, jsonify
 from . import app, db, models
 from tomtomLookup import tomtom_url, TomTomLookup
-
 
 ttl = TomTomLookup() # global
 
@@ -80,3 +81,17 @@ def process_routeinfo():
     else:
         return 'Content-Type not supported!'
 
+
+@app.route('/api/osEnv', methods=['GET'])
+def get_os_environment():
+    rend = ""
+    for item, value in environ.items():
+        rend = rend + ('<br>{}: {}'.format(item, value))
+    return rend
+
+@app.route('/api/rqEnv', methods=['GET'])
+def get_request_environment():
+    rend = ""
+    for item, value in request.environ.items():
+        rend = rend + ('<br>{}: {}'.format(item, value))
+    return rend
