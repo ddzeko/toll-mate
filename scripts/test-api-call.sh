@@ -5,8 +5,13 @@ testUri=/api/routeInfo
 if [[ -z "$PYTHONANYWHERE_DOMAIN" ]]; then
     testSite="http://127.0.0.1:5000"
 else
-    testSite=${WSGI_MODULE%%_wsgi}
-    testSite=${testSite//_/.}
+    if [[ -z "$WSGI_MODULE" ]]; then
+        testSite="${LOGNAME}.${PYTHONANYWHERE_DOMAIN}"
+    else
+        testSite=${WSGI_MODULE%%_wsgi}
+        testSite=${testSite//_/.}
+    fi
+    testSite="https://"
 fi
 
 rm -f response.head response.body 2>&- >&-
