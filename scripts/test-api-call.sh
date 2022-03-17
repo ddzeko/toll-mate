@@ -11,7 +11,7 @@ else
         testSite=${WSGI_MODULE%%_wsgi}
         testSite=${testSite//_/.}
     fi
-    testSite="https://"
+    testSite="https://${testSite}"
 fi
 
 rm -f response.head response.body 2>&- >&-
