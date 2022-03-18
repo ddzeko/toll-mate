@@ -1,0 +1,6 @@
+# output files created by running scripts
+*.out
+*.log
+*.head
+*.body
+*.json
