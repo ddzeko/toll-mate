@@ -40,7 +40,8 @@ class TripRecords(db.Model):
     status        = db.Column(db.Integer, nullable=False, default=0)
     hac_toll_hrk  = db.Column(db.Numeric(precision=6, scale=2), nullable=False)
     trip_length   = db.Column(db.Integer, nullable=True)
-    
+    speed_avg_kmh = db.Column(db.Numeric(precision=4, scale=1), nullable=True)
+
     def __init__(self, id_upload=None, entered_at=None, exited_at=None, hac_toll_hrk=None):
         self.id_upload = id_upload
         self.entered_at = entered_at

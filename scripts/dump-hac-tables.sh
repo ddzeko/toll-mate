@@ -19,6 +19,8 @@ else
     pa_options="--set-gtid-purged=OFF --column-statistics=0"
 fi
 
+# to back up only data: ADD: --no-create-info, -t 
+
 mysqldump -u ${DATABASE_USER} -h ${DATABASE_HOST} -P ${DATABASE_PORT} \
     --no-tablespaces --complete-insert --skip-extended-insert $pa_options \
     "${DATABASE_NAME}" \
