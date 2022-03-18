@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>URL Shortener</title>
+        <meta name="description" content="HAC Toll Mate">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#192855">
+        <link rel="stylesheet" href="../static/style/index.css">
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    </head>
+    <body>
+        <div class="heading">
+            <h1 class="main-heading"><a href="/">HAC Toll Mate</a></h1>
+            <h2 class="main-sub">Find out more from your trip report</h2>
+        </div>
+        
+        <form class="main-form" method="POST">
+            <input autocomplete="off" name="hac_trip_report" type="file" />
+            <button class="submit" type="submit">Submit file</button>
+        </form>
+    </body>
+</html>
+
+
+
+
+
+

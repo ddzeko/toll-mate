@@ -7,5 +7,9 @@
 *.sql
 *.xz
 
+# do not put those pesky backups to git
+backup
+backup/
+
 # un-ignore (whitelist) some of ours
 !./hac-ulazi-izlazi.csv
