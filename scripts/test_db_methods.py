@@ -8,8 +8,11 @@ from os import environ
 from datetime import datetime
 import json
 
-from hacGpsPoints import HAC_gpsPoints, HAC_gpsPoints_Error
+from os import path
+SCRIPT_DIR = path.dirname(path.abspath(__file__))
+sys.path.append(path.abspath(path.join(SCRIPT_DIR, '..')))
 
+from hacGpsPoints import HAC_gpsPoints, HAC_gpsPoints_Error
 from tollMate import db, models
 
 logging.basicConfig()
