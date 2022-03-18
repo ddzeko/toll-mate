@@ -8,8 +8,8 @@ from sqlalchemy.types import JSON
 from sqlalchemy.orm import aliased
 import logging
 
-class Uploads(db.Model):
-    __tablename__ = 'uploads'
+class UploadFiles(db.Model):
+    __tablename__ = 'upload_files'
     id = db.Column(db.Integer, primary_key=True)
     orig_filename = db.Column(db.String(50), unique=True)
     dest_filename = db.Column(db.String(120), unique=True)
@@ -26,7 +26,30 @@ class Uploads(db.Model):
         self.from_useragent = from_useragent
 
     def __repr__(self):
-        return f'<Uploads {self.dest_filename!r}>'
+        return f'<UploadFiles {self.dest_filename!r}>'
+
+
+class TripRecords(db.Model):
+    __tablename__ = 'trip_records'
+    id = db.Column(db.Integer, primary_key=True)
+    id_upload = db.Column(db.Integer, db.ForeignKey('upload_files.id', name="fk_upload"))    
+    entered_at  = db.Column(db.DateTime, nullable=False)
+    exited_at   = db.Column(db.DateTime, nullable=False)
+    id_mjesto_od = db.Column(db.Integer, db.ForeignKey('hac_mjesto.id', use_alter=True, name="fk_tr_mjesto_od"), nullable=False)
+    id_mjesto_do = db.Column(db.Integer, db.ForeignKey('hac_mjesto.id', use_alter=True, name="fk_tr_mjesto_do"), nullable=False)
+    status        = db.Column(db.Integer, nullable=False, default=0)
+    hac_toll_hrk  = db.Column(db.Numeric(precision=6, scale=2), nullable=False)
+    trip_length   = db.Column(db.Integer, nullable=True)
+    
+    def __init__(self, id_upload=None, entered_at=None, exited_at=None, hac_toll_hrk=None):
+        self.id_upload = id_upload
+        self.entered_at = entered_at
+        self.exited_at = exited_at
+        self.hac_toll_hrk = hac_toll_hrk  # will have to be changed to EUR at some point
+
+    def __repr__(self):
+        return f'<TripRecords {self.id!r}>'
+
 
 
 class HAC_Point(db.Model):

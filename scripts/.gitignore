@@ -4,3 +4,8 @@
 *.head
 *.body
 *.json
+*.sql
+*.xz
+
+# un-ignore (whitelist) some of ours
+!./hac-ulazi-izlazi.csv

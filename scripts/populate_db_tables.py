@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from os import path
 import sys
+
 import logging
 import argparse
 from os import environ
 from datetime import datetime
 import json
 
-from hacGpsPoints import HAC_gpsPoints, HAC_gpsPoints_Error
+SCRIPT_DIR = path.dirname(path.abspath(__file__))
+sys.path.append(path.abspath(path.join(SCRIPT_DIR, '..')))
 
+from hacGpsPoints import HAC_gpsPoints, HAC_gpsPoints_Error
 from tollMate import db, models
 
 # check if debugging requested via environment variable DEBUG
@@ -19,30 +23,18 @@ except:
     DEBUG = 0
 
 
-def load_mjesto_csv():
-    csv_row = ("Pirovac", "43.887595092962265,15.787249871525294", "43.88665174671077,15.785769292188363")
-    models.mjesto_add(csv_row)
-    
-    csv_row = ("Kutina", "45.462620831875604,16.76791165361246", "45.46162104834687,16.767158329990483")
-    models.mjesto_add(csv_row)
-
-
 def parse_args(args):
     """ Parse cmdline args """
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--gps-csv-file", help="GPS entry and exit pins file",
                         default="hac-ulazi-izlazi.csv")
     parser.add_argument("-l", "--log-file", help="log file name to be created",
-                        default="hac-xform-{:%Y%m%d}.log")
-    parser.add_argument("-x", "--output-xlsx", help="output Excel file to be created",
-                        default="hac-xform-{:%Y%m%d}.xlsx")
-    parser.add_argument("-j", "--output-json", help="output JSON file to be created",
-                        default="hac-xform-{:%Y%m%d}.json")                        
+                        default="db-ops-{:%Y%m%d}.log")               
     parser.add_argument("args", nargs='*')
     return parser.parse_args(args)
 
 
-def logging_init(args):
+def logging_init(args): 
     """ Initialize logging """
     global DEBUG
     logging.basicConfig(filename=args.log_file.format(datetime.now()),
@@ -57,7 +49,7 @@ def main():
     logging.info("HAC GPS Points Loader started, with DEBUG environment variable value set to {}".format(repr(DEBUG)))
     HAC_gpsPoints.loadFromCsvFile(args.gps_csv_file)
 
-    if False:
+    if True:
         rdg = HAC_gpsPoints.recordDataGenerator()
         for item in rdg:
             logging.info("item: {}".format(json.dumps(item)))
@@ -96,7 +88,8 @@ def main():
     logging.info("HAC GPS Points Loader finished")
 
     # TODO: what remains to be done now is to run TomTom API in a loop and update route matrix
-    # TODO: this to be done in a separate tool which is able to pick up work and continue
+    # TODO: this to be done in a separate tool which is able to be interrupted, then restarted
+    # TODO:  (to pick up work and continue processing)
 
     return 0
 

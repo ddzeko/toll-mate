@@ -3,14 +3,19 @@
 from os import environ
 
 import logging
-from flask import abort, request, json, jsonify
+from flask import abort, request, json, jsonify, render_template
 from . import app, db, models
 from tomtomLookup import tomtom_url, TomTomLookup
 
 ttl = TomTomLookup() # global
 
 
-@app.route('/')
+
+@app.route('/', methods=['GET'])
+def index():
+    return render_template("index.html")
+
+@app.route('/hello', methods=['GET'])
 def hello_world():
     try:
         return f'Hello from tollMate-view!'
