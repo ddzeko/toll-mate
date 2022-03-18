@@ -6,6 +6,7 @@
 *.json
 *.sql
 *.xz
+*.db
 
 # do not put those pesky backups to git
 backup
