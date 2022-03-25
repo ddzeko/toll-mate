@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 # tollMate runtime
+requests_cache.db
 uploads
 uploads/
