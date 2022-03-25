@@ -1,8 +1,10 @@
 # views.py
 
 from os import environ, path
-
+import hashlib
+import pprint
 import logging
+from datetime import datetime
 from flask import request, json, jsonify, render_template, redirect, url_for, abort, flash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -27,6 +29,7 @@ def upload_page():
     logging.debug("/upload => upload_extensions = {} ==> {}".format(repr(app.config['UPLOAD_EXTENSIONS']), nxt))
     return render_template("index.html", upload_extensions=nxt) 
 
+
 @app.route('/uploader', methods=['GET', 'POST'])
 def upload_file():
     if 'Accept' in request.headers and request.headers['Accept'] == 'application/json':
@@ -42,20 +45,17 @@ def upload_file():
         return redirect(url_for('upload_page'))
 
 
-#   app.logger.debug("1-Request Method: '%s', headers:\n%s\n", request.method, request.headers)
-#   app.logger.debug("2-Request form\n-------\n%s\n", request.form)
-#   app.logger.debug("3-Request files\n-------\n%s\n", request.files)
+    logging.debug("1-Request Method: '%s', headers:\n%s\n", request.method, request.headers)
+    logging.debug("2-Request form\n-------\n%s\n", request.form)
+    logging.debug("3-Request files\n-------\n%s\n", request.files)
 
     for rf in request.files:
-        app.logger.debug(f'RF {rf}')
-
-#   for ra in request.form:
-#      app.logger.debug(f'RA {ra}')
+        logging.debug(f'RF {rf}')
 
     if request.method == 'POST':
         uploaded_file = request.files['file']
         xuf = uploaded_file.__dict__
-#      app.logger.debug("TRACE\n-------\n%s\n", pprint.pprint(xuf))
+        logging.debug("TRACE\n-------\n%s\n", pprint.pprint(xuf))
 
         filename = secure_filename(uploaded_file.filename)
         app.logger.debug("FILENAME = %s\n", filename)
@@ -68,15 +68,40 @@ def upload_file():
                 return redirect(url_for('upload_page'))
 #            abort(400)
 
+        # generate safe and random local filename
+        timestamp = datetime.now().isoformat()
+        fn_with_tstamp = f'{filename}.{timestamp}'
+        hash_object = hashlib.sha256(fn_with_tstamp.encode('utf-8'))
+        hex_digest = hash_object.hexdigest()[:32]
+        local_filename = f'{hex_digest}{file_ext}'
+
         uploaded_file.save(path.join(
-            app.config['UPLOAD_FOLDER'], filename.lower()))
-        return r'{"result":"fileAccepted"}'
+            app.config['UPLOAD_FOLDER'], local_filename))
+
+        # add a record to uploads table
+        uf_id = models.uploadfiles_add(
+            orig_filename=filename,
+            dest_filename=local_filename,
+            from_remoteip=request.environ.get('HTTP_X_REAL_IP', request.remote_addr),
+            from_useragent=request.headers.get('User-Agent'))
+
+        # for JSON literals
+        true = True
+        false = False
+        null = None
+
+        return jsonify({
+            "result": "fileAccepted",
+            "success": true,
+            "error": "none",
+            "uploadFilesId": uf_id
+        })
 
 
 @app.errorhandler(RequestEntityTooLarge)
 def handle_over_max_file_size(error):
     print("werkzeug.exceptions.RequestEntityTooLarge")
-    return r'{"result":"exceptions.RequestEntityTooLarge"}'
+    return r'{"result":"exceptions.RequestEntityTooLarge", "success": false, "error": "file too large"}'
 
 
 

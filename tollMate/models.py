@@ -11,7 +11,7 @@ import logging
 class UploadFiles(db.Model):
     __tablename__ = 'upload_files'
     id = db.Column(db.Integer, primary_key=True)
-    orig_filename = db.Column(db.String(50), unique=True)
+    orig_filename = db.Column(db.String(50), unique=False)
     dest_filename = db.Column(db.String(120), unique=True)
     updated_at    = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
     created_at    = db.Column(db.DateTime, default=func.now())
@@ -144,6 +144,14 @@ class HAC_TablicaRuta(db.Model):
     def __init__(self, id_mjesto_od=None, id_mjesto_do=None):
         self.id_mjesto_od = id_mjesto_od
         self.id_mjesto_do = id_mjesto_do
+
+
+# adding UploadFiles record
+def uploadfiles_add(orig_filename=None, dest_filename=None, from_remoteip=None, from_useragent=None):
+    uf = UploadFiles(orig_filename=orig_filename, dest_filename=dest_filename, from_remoteip=from_remoteip, from_useragent=from_useragent)
+    db.session.add(uf)
+    db.session.commit()
+    return uf.id
 
 
 # adding HAC_Mjesto record and its entry/exit points as HAC_Point
