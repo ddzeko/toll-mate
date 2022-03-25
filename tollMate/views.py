@@ -1,9 +1,13 @@
 # views.py
 
-from os import environ
+from os import environ, path
 
 import logging
-from flask import abort, request, json, jsonify, render_template
+from flask import request, json, jsonify, render_template, redirect, url_for, abort, flash
+from werkzeug.utils import secure_filename
+from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.datastructures import ImmutableMultiDict
+
 from . import app, db, models
 from tomtomLookup import tomtom_url, TomTomLookup
 
@@ -13,7 +17,68 @@ ttl = TomTomLookup() # global
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template("index.html")
+    nxt = ','.join(f'.{ext}' for ext in app.config['UPLOAD_EXTENSIONS'])
+    logging.debug("/ => upload_extensions = {} ==> {}".format(repr(app.config['UPLOAD_EXTENSIONS']), nxt))
+    return render_template("index.html", upload_extensions=nxt) 
+
+@app.route('/upload', methods=['GET'])
+def upload_page():
+    nxt = ','.join(f'.{ext}' for ext in app.config['UPLOAD_EXTENSIONS'])
+    logging.debug("/upload => upload_extensions = {} ==> {}".format(repr(app.config['UPLOAD_EXTENSIONS']), nxt))
+    return render_template("index.html", upload_extensions=nxt) 
+
+@app.route('/uploader', methods=['GET', 'POST'])
+def upload_file():
+    if 'Accept' in request.headers and request.headers['Accept'] == 'application/json':
+        app.logger.debug("Request form\n-------\n%s",
+                         pprint.pprint(request.form))
+        app.logger.debug("Request files\n-------\n%s",
+                         pprint.pprint(request.files))
+        return r'{"result":"okie"}'
+
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(url_for('upload_page'))
+
+
+#   app.logger.debug("1-Request Method: '%s', headers:\n%s\n", request.method, request.headers)
+#   app.logger.debug("2-Request form\n-------\n%s\n", request.form)
+#   app.logger.debug("3-Request files\n-------\n%s\n", request.files)
+
+    for rf in request.files:
+        app.logger.debug(f'RF {rf}')
+
+#   for ra in request.form:
+#      app.logger.debug(f'RA {ra}')
+
+    if request.method == 'POST':
+        uploaded_file = request.files['file']
+        xuf = uploaded_file.__dict__
+#      app.logger.debug("TRACE\n-------\n%s\n", pprint.pprint(xuf))
+
+        filename = secure_filename(uploaded_file.filename)
+        app.logger.debug("FILENAME = %s\n", filename)
+        app.logger.debug("CntType = %s\n", uploaded_file.content_type)
+
+        if filename != '':
+            (basename, file_ext) = path.splitext(filename)
+            if file_ext[1:] not in app.config['UPLOAD_EXTENSIONS']:
+                flash('Wrong type of file: ' + file_ext)
+                return redirect(url_for('upload_page'))
+#            abort(400)
+
+        uploaded_file.save(path.join(
+            app.config['UPLOAD_FOLDER'], filename.lower()))
+        return r'{"result":"fileAccepted"}'
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_over_max_file_size(error):
+    print("werkzeug.exceptions.RequestEntityTooLarge")
+    return r'{"result":"exceptions.RequestEntityTooLarge"}'
+
+
 
 @app.route('/hello', methods=['GET'])
 def hello_world():

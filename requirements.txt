@@ -6,3 +6,4 @@ SQLAlchemy
 Werkzeug
 mariadb
 requests-cache
+flask-log-request-id
