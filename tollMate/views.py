@@ -2,13 +2,13 @@
 
 from os import environ, path
 import hashlib
-import pprint
+from pprint import pprint
 import logging
 from datetime import datetime
 from flask import request, json, jsonify, render_template, redirect, url_for, abort, flash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
-from werkzeug.datastructures import ImmutableMultiDict
+from werkzeug.datastructures import ImmutableMultiDict, FileStorage
 
 from . import app, db, models
 from tomtomLookup import tomtom_url, TomTomLookup
@@ -30,72 +30,88 @@ def upload_page():
     return render_template("index.html", upload_extensions=nxt) 
 
 
-@app.route('/uploader', methods=['GET', 'POST'])
+@app.route('/uploader', methods=['POST'])
 def upload_file():
-    if 'Accept' in request.headers and request.headers['Accept'] == 'application/json':
-        app.logger.debug("Request form\n-------\n%s",
-                         pprint.pprint(request.form))
-        app.logger.debug("Request files\n-------\n%s",
-                         pprint.pprint(request.files))
-        return r'{"result":"okie"}'
 
     # check if the post request has the file part
     if 'file' not in request.files:
         flash('No file part')
-        return redirect(url_for('upload_page'))
+        return redirect(url_for('index'))
 
 
     logging.debug("1-Request Method: '%s', headers:\n%s\n", request.method, request.headers)
     logging.debug("2-Request form\n-------\n%s\n", request.form)
     logging.debug("3-Request files\n-------\n%s\n", request.files)
 
-    for rf in request.files:
-        logging.debug(f'RF {rf}')
-
+    uploaded_file = 'none-so-far'
     if request.method == 'POST':
-        uploaded_file = request.files['file']
-        xuf = uploaded_file.__dict__
-        logging.debug("TRACE\n-------\n%s\n", pprint.pprint(xuf))
+        uploaded_files = request.files.getlist('file')
+        logging.debug("4-getlist/files: %d\n", len(uploaded_files))
+        for ufv in uploaded_files:
+            logging.debug("xxx = %s\n", ufv)
+            try:
+                if isinstance(ufv, FileStorage) and ufv.filename:
+                    uploaded_file = ufv
+                    break
+            except:
+                pass
 
-        filename = secure_filename(uploaded_file.filename)
-        app.logger.debug("FILENAME = %s\n", filename)
-        app.logger.debug("CntType = %s\n", uploaded_file.content_type)
+        logging.debug("TRACE\n-------\n%s\n", uploaded_file)
 
-        if filename != '':
-            (basename, file_ext) = path.splitext(filename)
-            if file_ext[1:] not in app.config['UPLOAD_EXTENSIONS']:
-                flash('Wrong type of file: ' + file_ext)
-                return redirect(url_for('upload_page'))
-#            abort(400)
+#    if 'Accept' in request.headers and request.headers['Accept'] == 'application/json':
+#        app.logger.debug("Request form\n-------\n%s", pprint(request.form))
+#        app.logger.debug("Request files\n-------\n%s", pprint(request.files))
+#        return r'{"result":"okie"}'
 
-        # generate safe and random local filename
-        timestamp = datetime.now().isoformat()
-        fn_with_tstamp = f'{filename}.{timestamp}'
-        hash_object = hashlib.sha256(fn_with_tstamp.encode('utf-8'))
-        hex_digest = hash_object.hexdigest()[:32]
-        local_filename = f'{hex_digest}{file_ext}'
+#     ffd = request.files.to_dict(flat=False)
+# #    logging.debug("0-FFD\n-------\n%s\n", pprint(ffd))
 
-        uploaded_file.save(path.join(
-            app.config['UPLOAD_FOLDER'], local_filename))
+#     for rf in ffd:
+#         logging.debug("RF>>> %s => %s\n<<<", rf, ffd[rf])
+#         for ii in range(len(ffd[rf])):
+#             logging.debug("RF %d >>> => %s\n<<<", ii, ffd[rf][ii])
 
-        # add a record to uploads table
-        uf_id = models.uploadfiles_add(
-            orig_filename=filename,
-            dest_filename=local_filename,
-            from_remoteip=request.environ.get('HTTP_X_REAL_IP', request.remote_addr),
-            from_useragent=request.headers.get('User-Agent'))
 
-        # for JSON literals
-        true = True
-        false = False
-        null = None
+    filename = secure_filename(uploaded_file.filename)
+    app.logger.debug("FILENAME = %s\n", filename)
+    app.logger.debug("CntType = %s\n", uploaded_file.content_type)
 
-        return jsonify({
-            "result": "fileAccepted",
-            "success": true,
-            "error": "none",
-            "uploadFilesId": uf_id
-        })
+    if filename != '':
+        (basename, file_ext) = path.splitext(filename)
+        if file_ext[1:] not in app.config['UPLOAD_EXTENSIONS']:
+            flash('Wrong type of file: ' + file_ext)
+            return redirect(url_for('upload_page'))
+    else:
+        abort(400)
+
+    # generate safe and random local filename
+    timestamp = datetime.now().isoformat()
+    fn_with_tstamp = f'{filename}.{timestamp}'
+    hash_object = hashlib.sha256(fn_with_tstamp.encode('utf-8'))
+    hex_digest = hash_object.hexdigest()[:32]
+    local_filename = f'{hex_digest}{file_ext}'
+
+    uploaded_file.save(path.join(
+        app.config['UPLOAD_FOLDER'], local_filename))
+
+    # add a record to uploads table
+    uf_id = models.uploadfiles_add(
+        orig_filename=filename,
+        dest_filename=local_filename,
+        from_remoteip=request.environ.get('HTTP_X_REAL_IP', request.remote_addr),
+        from_useragent=request.headers.get('User-Agent'))
+
+    # for JSON literals
+    true = True
+    false = False
+    null = None
+
+    return jsonify({
+        "result": "fileAccepted",
+        "success": true,
+        "error": "none",
+        "uploadFilesId": uf_id
+    })
 
 
 @app.errorhandler(RequestEntityTooLarge)
