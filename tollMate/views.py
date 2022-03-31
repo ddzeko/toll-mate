@@ -73,6 +73,8 @@ def upload_file():
 
 
     filename = secure_filename(uploaded_file.filename)
+    
+    # good logging goes to system default location
     app.logger.debug("FILENAME = %s\n", filename)
     app.logger.debug("CntType = %s\n", uploaded_file.content_type)
 
