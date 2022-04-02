@@ -7,3 +7,4 @@ Werkzeug
 mariadb
 requests-cache
 flask-log-request-id
+xlrd==1.2.0

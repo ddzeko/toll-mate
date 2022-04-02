@@ -11,7 +11,8 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.datastructures import ImmutableMultiDict, FileStorage
 
 from . import app, db, models
-from tomtomLookup import tomtom_url, TomTomLookup
+from .controllers.tomtomLookup import tomtom_url, TomTomLookup
+from .controllers.hacTripsExcel import process_hac_workbook
 
 ttl = TomTomLookup() # global
 
@@ -92,6 +93,7 @@ def upload_file():
     hash_object = hashlib.sha256(fn_with_tstamp.encode('utf-8'))
     hex_digest = hash_object.hexdigest()[:32]
     local_filename = f'{hex_digest}{file_ext}'
+    json_filename = f'{hex_digest}.json'
 
     uploaded_file.save(path.join(
         app.config['UPLOAD_FOLDER'], local_filename))
@@ -107,6 +109,10 @@ def upload_file():
     true = True
     false = False
     null = None
+
+    process_hac_workbook(
+        path.join(app.config['UPLOAD_FOLDER'], local_filename),
+        path.join(app.config['UPLOAD_FOLDER'], json_filename))
 
     return jsonify({
         "result": "fileAccepted",
@@ -168,6 +174,25 @@ def api_route_get_coords(route_id):
 @app.route('/api/mjesto/<mjesto_id>', methods=['GET'])
 def api_mjesto_get_details(mjesto_id):
     return jsonify(models.mjesto_get_by_id(mjesto_id))
+
+
+@app.route('/api/mjesto', methods=['GET'])
+def api_mjesto_get_id():
+    args = request.args
+    mjesto = args.get('mjesto')
+    if mjesto is None:
+        return   
+    return jsonify(models.mjesto_get_by_mjesto(mjesto))
+
+
+@app.route('/api/point', methods=['GET'])
+def api_point_get_mjesto_port():
+    args = request.args
+    mjesto_id = args.get('mjestoId')
+    port = args.get('port')
+    if None in (mjesto_id, port):
+        return
+    return jsonify(models.point_get_by_mjesto_port(mjesto_id, port))
 
 
 

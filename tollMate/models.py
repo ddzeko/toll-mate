@@ -11,12 +11,12 @@ import logging
 class UploadFiles(db.Model):
     __tablename__ = 'upload_files'
     id = db.Column(db.Integer, primary_key=True)
-    orig_filename = db.Column(db.String(50), unique=False)
+    orig_filename = db.Column(db.String(120), unique=False)
     dest_filename = db.Column(db.String(120), unique=True)
     updated_at    = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
     created_at    = db.Column(db.DateTime, default=func.now())
     status        = db.Column(db.Integer, nullable=False, default=0)
-    from_remoteip = db.Column(db.String(50), nullable=True)
+    from_remoteip = db.Column(db.String(80), nullable=True)
     from_useragent = db.Column(db.String(250), nullable=True)
     
     def __init__(self, orig_filename=None, dest_filename=None, from_remoteip=None, from_useragent=None):
@@ -171,14 +171,31 @@ def mjesto_add(item_dict):
     db.session.commit()
     return mj.id
 
+# lookup for mjesto in HAC_Mjesto
+def mjesto_get_by_mjesto(mjesto):
+    return db.session.query(HAC_Mjesto.id).filter_by(mjesto=mjesto).scalar()
+
+# get point of 'ulaz' or 'izlaz' of certain HAC_Mjesto
+def point_get_by_mjesto_port(id_mjesto, port_name):
+    if None in (id_mjesto, port_name):
+        return
+    if 'ulaz' == port_name.lower():
+        je_izlaz = False
+    elif 'izlaz' == port_name.lower():
+        je_izlaz = True
+    else:
+        return
+    return list(db.session.query(HAC_Point.gps_lon, HAC_Point.gps_lat).filter_by(id_mjesto=id_mjesto, je_izlaz=je_izlaz).first())
+
 
 # add entry to matrix HAC_TablicaRuta
 def mjesto_get_list_by_route(route):
-    return db.session.query(HAC_Mjesto).filter_by(ruta=route).all()
+    return db.session.query(HAC_Mjesto.id).filter_by(ruta=route).all()
 
 
 def mjesto_get_unique_routes():
     return db.session.query(HAC_Mjesto.ruta, func.count(HAC_Mjesto.ruta)).group_by(HAC_Mjesto.ruta).all()
+
 
 # adding HAC_TablicaRuta entry initially, will require processing to populate with distance
 def routetab_add(id_mjesto_od, id_mjesto_do):
@@ -234,3 +251,7 @@ def routetab_get_routeinfo(hac_ulaz, hac_izlaz):
     except:
         print('Error in routetab_get_routeinfo()')
         return { "error": "Error in routetab_get_routeinfo()" }
+
+# route get distance 
+def routetab_get_distance(id_ulaz, id_izlaz):
+    return db.session.query(HAC_TablicaRuta.route_length).filter_by(id_mjesto_od=id_ulaz, id_mjesto_do=id_izlaz).scalar()
