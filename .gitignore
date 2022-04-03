@@ -132,3 +132,5 @@ dmypy.json
 requests_cache.db
 uploads
 uploads/
+datastore
+datastore/

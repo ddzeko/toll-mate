@@ -5,7 +5,7 @@ import hashlib
 from pprint import pprint
 import logging
 from datetime import datetime
-from flask import request, json, jsonify, render_template, redirect, url_for, abort, flash
+from flask import request, json, jsonify, render_template, redirect, url_for, abort, flash, send_from_directory
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.datastructures import ImmutableMultiDict, FileStorage
@@ -105,21 +105,31 @@ def upload_file():
         from_remoteip=request.environ.get('HTTP_X_REAL_IP', request.remote_addr),
         from_useragent=request.headers.get('User-Agent'))
 
+    uploaded_xlsx = path.join(app.config['UPLOAD_FOLDER'], local_filename)
+    datastore_json = path.join(app.config['DATASTORE_FOLDER'], json_filename)
+
     # for JSON literals
     true = True
     false = False
     null = None
 
-    process_hac_workbook(
-        path.join(app.config['UPLOAD_FOLDER'], local_filename),
-        path.join(app.config['UPLOAD_FOLDER'], json_filename))
-
-    return jsonify({
-        "result": "fileAccepted",
-        "success": true,
-        "error": "none",
-        "uploadFilesId": uf_id
-    })
+    tr_count = process_hac_workbook(uf_id, uploaded_xlsx, datastore_json)
+    
+    if tr_count:
+        return jsonify({
+            "result": "fileAccepted",
+            "success": true,
+            "error": "none",
+            "uploadFilesId": uf_id,
+            "tripRecords_count": tr_count,
+            "datastore_json": datastore_json
+        })
+    else:
+        return jsonify({
+            "result": "fileProcessingError",
+            "success": false,
+            "error": "unspecified error"
+        })
 
 
 @app.errorhandler(RequestEntityTooLarge)
@@ -137,6 +147,13 @@ def hello_world():
             logging.error (e.__class__.__name__)
             db.session.rollback ()
             abort (500, 'Error. Something bad happened.')
+
+
+@app.route('/datastore/<path:filename>', methods=['GET'])
+def datastore_show_item(filename):
+    app.logger.debug("DS folder = '%s', filename = '%s'\n", app.config['DATASTORE_FOLDER'], filename)
+    return send_from_directory(path.join('..', app.config['DATASTORE_FOLDER']), filename, as_attachment=True)
+#    return f'Requested item: {file}'
 
 
 # TOMTOM API

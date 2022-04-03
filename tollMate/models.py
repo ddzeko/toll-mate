@@ -42,11 +42,17 @@ class TripRecords(db.Model):
     trip_length   = db.Column(db.Integer, nullable=True)
     speed_avg_kmh = db.Column(db.Numeric(precision=4, scale=1), nullable=True)
 
-    def __init__(self, id_upload=None, entered_at=None, exited_at=None, hac_toll_hrk=None):
+    def __init__(self, id_upload=None, entered_at=None, exited_at=None, id_mjesto_od=None, id_mjesto_do=None, 
+                status=0, hac_toll_hrk=None, trip_length=None, speed_avg_kmh=None):
         self.id_upload = id_upload
         self.entered_at = entered_at
         self.exited_at = exited_at
-        self.hac_toll_hrk = hac_toll_hrk  # will have to be changed to EUR at some point
+        self.id_mjesto_od = id_mjesto_od
+        self.id_mjesto_do = id_mjesto_do
+        self.status = status
+        self.hac_toll_hrk = hac_toll_hrk # will have to be changed to EUR at some point
+        self.trip_length = trip_length
+        self.speed_avg_kmh = speed_avg_kmh
 
     def __repr__(self):
         return f'<TripRecords {self.id!r}>'
@@ -152,6 +158,23 @@ def uploadfiles_add(orig_filename=None, dest_filename=None, from_remoteip=None, 
     db.session.add(uf)
     db.session.commit()
     return uf.id
+
+
+# adding TripRecords record
+def triprecords_add(id_upload, entered_at, exited_at, id_mjesto_od, id_mjesto_do, 
+                status, hac_toll_hrk, trip_length, speed_avg_kmh):
+    tr = TripRecords(id_upload=id_upload, entered_at=entered_at, exited_at=exited_at, 
+                id_mjesto_od=id_mjesto_od, id_mjesto_do=id_mjesto_do, 
+                status=status, hac_toll_hrk=hac_toll_hrk, trip_length=trip_length, 
+                speed_avg_kmh=speed_avg_kmh)
+    db.session.add(tr)
+    db.session.commit()
+    return tr.id
+
+
+# get count of records inserted
+def triprecords_count(id_upload):
+    return db.session.query(TripRecords).filter_by(id_upload=id_upload).count()
 
 
 # adding HAC_Mjesto record and its entry/exit points as HAC_Point

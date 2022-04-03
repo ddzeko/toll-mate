@@ -263,7 +263,7 @@
                 </div> 
 
                 <div class="box__uploading">Uploading&hellip;</div>
-                <div class="box__success">Done! <a href="https://css-tricks.com/examples/DragAndDropFileUploading//?" class="box__restart" role="button">Upload more?</a></div>
+                <div class="box__success">Done! <a href="" id="datastore_link" target="_blank">Show results</a></div>
                 <div class="box__error">Error! <span></span>. <a href="{{url_for('index')}}" class="box__restart" role="button">Try again!</a></div>
             </form>
         
@@ -391,6 +391,10 @@
 							var data = JSON.parse( ajax.responseText );
 							form.classList.add( data.success == true ? 'is-success' : 'is-error' );
 							if( !data.success ) errorMsg.textContent = data.error;
+                            else {
+                                var e = document.getElementById("datastore_link");
+                                e.setAttribute("href", data.datastore_json);
+                            }
 						}
 						else alert( 'Error. Please, contact the webmaster!' );
 					};

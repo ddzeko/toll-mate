@@ -109,7 +109,7 @@ def humanize_time(amount):
     return buf.rstrip()
 
 
-def hac_sheet_process(worksheet, header_rownum, json_out_fn):
+def hac_sheet_process(uf_id, worksheet, header_rownum, json_out_fn):
     """
     We go through workbook looking for rows we're interested in
     """
@@ -202,19 +202,34 @@ def hac_sheet_process(worksheet, header_rownum, json_out_fn):
             json.dump(json_obj, of, sort_keys=False)
             of.write('\n')
 
+            # enter records in the TripRecords table
+            models.triprecords_add(id_upload=uf_id, id_mjesto_od=hac_od, id_mjesto_do=hac_do,
+                entered_at=vr_ul_dt, exited_at=vr_iz_dt, hac_toll_hrk=toll_hrk, status=1,
+                trip_length=int(dist), speed_avg_kmh=avg_speed_kmh)
+
+            row_out += 1
+
     # end for
     of.close()
 
     # TODO: izbaciti malo bogatiji summary na kraju, dodati zbirni redak u Excel
     app.logger.info(f'Zapisano ukupno {row_out} slogova u izlaznu JSON datoteku "{json_out_fn}"')
 
+    tr_count = models.triprecords_count(uf_id)
+    app.logger.info(f'Baza sad sadrzi {tr_count} slogova trip recorda')
+    return tr_count
 
 
+def process_hac_workbook(uf_id, wbfile, json_out_fn):
+    # returns: number of TripRecords created from HAC Sheet
+    tr_count = None
 
-def process_hac_workbook(wbfile, json_out_fn):
     workbook = xlrd.open_workbook(wbfile)
     worksheet = workbook.sheet_by_index(0)
     header_rownum = hac_sheet_validate(worksheet)
-    if header_rownum:
-        hac_sheet_process(worksheet, header_rownum, json_out_fn)
+    
+    if header_rownum and uf_id:
+        tr_count = hac_sheet_process(uf_id, worksheet, header_rownum, json_out_fn)
+    
     app.logger.info(f'Odradio process_hac_workbook na "{wbfile}" - rezultat je u "{json_out_fn}"')
+    return tr_count

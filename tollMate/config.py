@@ -22,6 +22,7 @@ class Config:
     TEMPLATES_FOLDER = 'templates'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'uploads'
+    DATASTORE_FOLDER = 'datastore'
     UPLOAD_EXTENSIONS = [ 'xlsx', 'xls' ]
     MAX_CONTENT_LENGTH = 8 * 1024 * 1024
     LOG_REQUEST_ID_GENERATE_IF_NOT_FOUND = True
