@@ -1,0 +1,7 @@
+
+Make use of: https://www.jsdelivr.com/
+A free CDN for Open Source, fast, reliable, and automated
+- for referencing NPM modules, jQuery and alike
+
+Social Authentication
+https://testdriven.io/blog/flask-social-auth/
