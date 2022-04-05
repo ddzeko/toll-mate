@@ -12,7 +12,7 @@ from werkzeug.datastructures import ImmutableMultiDict, FileStorage
 
 from . import app, db, models
 from .controllers.tomtomLookup import tomtom_url, TomTomLookup
-from .controllers.hacTripsExcel import process_hac_workbook
+from .controllers.hacTripsExcel import HAC_Sheet_Object
 
 ttl = TomTomLookup() # global
 
@@ -77,7 +77,7 @@ def upload_file():
     
     # good logging goes to system default location
     app.logger.debug("FILENAME = %s\n", filename)
-    app.logger.debug("CntType = %s\n", uploaded_file.content_type)
+    app.logger.debug("MimeType = %s\n", uploaded_file.content_type)
 
     if filename != '':
         (basename, file_ext) = path.splitext(filename)
@@ -113,7 +113,8 @@ def upload_file():
     false = False
     null = None
 
-    tr_count = process_hac_workbook(uf_id, uploaded_xlsx, datastore_json)
+    hac_sheet = HAC_Sheet_Object(uploads_id=uf_id, original_wb_fn=filename, hashed_wb_fn=uploaded_xlsx)
+    tr_count = hac_sheet.process_workbook(datastore_json)
     
     if tr_count:
         return jsonify({
